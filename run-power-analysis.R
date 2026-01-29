@@ -8,22 +8,11 @@ library(grid)
 library(ggplot2)
 library(beepr)
 
-setwd("D:/UCSD/Thesis/Bayesian cRCT design/code")
-
 source("function_SimData.R", echo=TRUE)
 source("function_Estimate.R", echo=TRUE)
 source("function_GetPower.R", echo=TRUE)
 
 run_name = "test_run"
-
-# Load example data set
-load("sims_sample_size/datasets/2026-01-20_6_5.RData")
-simdata$adherence_final_indic[which(simdata$missing_final_indic == 1)] = NA
-simdata <- data.frame("village_id" = simdata$village_id, 
-                      "arm_id" = simdata$arm_id, 
-                      "adherence_base_indic" = simdata$adherence_base_indic, 
-                      "adherence_final_indic" = simdata$adherence_final_indic, 
-                      "followup_final_indic" = simdata$missing_final_indic)
 
 ################################################################################
 
@@ -74,6 +63,7 @@ ggplot(power.df, aes(x = power)) +
   theme_light()
 
 ggsave(filename = paste(plot_name, ".png", sep =""))
+
 
 
 
