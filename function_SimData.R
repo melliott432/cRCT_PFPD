@@ -8,12 +8,12 @@ SimData <- function(run_name, parms){
   require(mvtnorm)
   
   n_village = parms$n_village
-  n_ind = n_ind
-  n_arm = n_arm
-  pii=pii
-  tau = tau
-  delta = delta
-  sd_mult = sd_mult
+  n_ind = parms$n_ind
+  n_arm = parms$n_arm
+  pii = parms$pii
+  tau = parms$tau
+  delta = parms$delta
+  sd_mult = parms$sd_mult
 
   n_ind_total = n_village*n_ind
   
@@ -72,6 +72,8 @@ SimData <- function(run_name, parms){
   adherence_final_logit = village_eff + individual_eff + arm_eff
   adherence_final_prob = invlogit(adherence_final_logit)
   adherence_final_indic = rbinom(n_ind_total, 1, prob = adherence_final_prob)
+  
+  adherence_final_indic[which(followup_final_indic == 1)] = NA
   
   ##############################################################################
   # COMBINE AND RETURN

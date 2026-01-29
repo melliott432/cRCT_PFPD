@@ -1,20 +1,34 @@
-SimEstimate <- function(simdata, run_name) {
+SimEstimate <- function(df, run_name) {
   
-  # Format data for model
-  Y <- simdata$adherence_final_indic
-  X <- simdata$arm_id - 1
-  Ri <- simdata |>
+  # Format data
+  
+  n_village = length(unique(df$village_id))
+  
+  # Adherence outcome
+  Y <- na.omit(df$adherence_final_indic)
+  
+  # Arm assignment
+  X <- df$arm_id - 1
+  
+  # Cluster follow-up proportion 
+  Ri <- df |>
     group_by(village_id) |>
     summarise(Rprop = sum(followup_final_indic)/length(followup_final_indic))
   Ri <- Ri$Rprop
   Ri <- ifelse(Ri>0.999, 0.999, Ri)
   Ri <- ifelse(Ri<0.001, 0.001, Ri)
-  R <- matrix(simdata$followup_final_indic, ncol = n_village)
-  vid <- matrix(simdata$village_id, ncol = n_village)
-  village <- simdata$village_id
+  
+  # Individual follow-up 
+  R <- matrix(df$followup_final_indic, ncol = n_village)
+  
+  # Village/cluster ID
+  vid <- matrix(df$village_id, ncol = n_village)
+  village <- df$village_id
+  
   J = length(Y)
   N = ncol(R)
   M = nrow(R)
+  
   jagsData <- list("Y" = Y, "X" = X, "R" = R, "village" = village, "J" = J, "N" = N, "M" = M)
   
   ############################################################################
@@ -75,7 +89,7 @@ SimEstimate <- function(simdata, run_name) {
   post4 <- posterior_sample[[4]]
   posterior <- rbind(post1, post2, post3, post4)
   
-  filename <- paste("posteriors/posterior_", run_name, ".RData", sep = "")
+  filename <- paste("posterior_", run_name, ".RData", sep = "")
   save(posterior, file = filename)
   
   return(posterior)
