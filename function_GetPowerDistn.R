@@ -3,9 +3,9 @@ GetPower <- function(run_name, df, estimates, parms){
   source("D:/UCSD/Thesis/Bayesian cRCT design/code/function_CalcPower.R")
   
   # Define parameters
-  alpha = parms$alpha
-  n_ind = parms$n_ind
-  n_village = parms$n_village
+  alpha = parms$alpha # type I error rate aka significance level
+  n_ind = parms$n_ind # cluster size
+  n_village = parms$n_village # number of clusters
   
   # Number of MCMC iterations
   B = 1000
