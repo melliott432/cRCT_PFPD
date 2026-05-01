@@ -1,3 +1,5 @@
+# Eqn 13 from Taljaard, Donner, and Klar 2007
+
 CalcPower <- function(alpha, n, m, pii, tau, delta, rho, P0, P1){
   
   G <- 1 + (((m*pii) - 1)*rho) + (1-pii)*(1 + (m-1)*tau)*rho # correction factor
