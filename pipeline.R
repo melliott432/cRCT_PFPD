@@ -1,66 +1,44 @@
-################################################################################
-#### Environment set-up
-
-setwd("D:/UCSD/Thesis/Bayesian cRCT design")
 
 library(gridExtra)
 library(tidyverse)
 
-source("code/function_SimulateData.R", echo=TRUE)
-source("code/function_Estimate.R", echo=TRUE)
-source("code/function_GetPowerDistn.R", echo=TRUE)
+setwd("D:/UCSD/Thesis/Bayesian cRCT design/code")
 
+source("function_SimulateData.R", echo=TRUE)
+source("function_Estimate.R", echo=TRUE)
+source("function_GetPowerDistn.R", echo=TRUE)
+source("function_CalcPower.R", echo = TRUE)
+
+parms_grid <- expand.grid("rep" = 1:n_reps, "alpha" = alpha, "n_arm" = n_arm, 
+                          "sd_mult" = sd_mult, "p1" = p1, 
+                          "n_village" = n_village, "n_ind" = n_ind, 
+                          "pii" = pii, "tau" =  tau, "delta" = delta)
+                          
 setwd("D:/UCSD/Thesis/Bayesian cRCT design/results/simulations")
 
-################################################################################
-#### Simulation settings to run
-
-# Load in info of simulations to run
-if(TYPE == "PC"){
-  load("param_combos_info.RData")
-}else if(TYPE == "SS"){
-  load("sample_size_info.RData")
-}else{
-  print("Specify which simulations to run (PC or SS)")
+for(i in 1:nrow(parms_grid)){
+  
+  parms <- list("n_village" =  parms_grid$n_village[i], # total number of clusters
+                "n_ind" = parms_grid$n_ind[i],     # common cluster size
+                "n_arm"= parms_grid$n_arm[i],       # number of arms
+                "pii" = parms_grid$pii[i],     # follow-up rate
+                "tau" = parms_grid$tau[i],     # attrition ICC
+                "delta" = parms_grid$delta[i],   # treatment effect (raw change in proportion)
+                "sd_mult" = parms_grid$sd_mult[i], # common standard deviation,
+                "p1" = parms_grid$p1[i], # baseline or control outcome proportion,
+                "alpha" = 0.05
+  )
+  
+  run_name = paste(parms_grid[i,"n_village"],parms_grid[i,"n_ind"],100*parms_grid[i,"pii"],100*abs(parms_grid[i,"tau"]),100*abs(parms_grid[i,"delta"]),parms_grid[i,"rep"],sep = "_")
+  
+  sim.df <- SimData(run_name = run_name, parms = parms)
+  save(sim.df, file = paste("simdata_",run_name,".RData",sep=""))
+  
+  estimates <- Estimate(df = sim.df, run_name = run_name)
+  save(estimates, file = paste("posterior_",run_name,".RData",sep=""))
+  
+  power.dist <- GetPower(run_name = run_name, parms = parms, estimates = estimates)
+  save(power.dist, file = paste("power_", run_name, ".RData", sep = ""))
+  
+  print(paste("Done running", run_name, sep = " "))
 }
-
-siminfo <- mutate(siminfo, estimate_file_name = paste("posterior_", run_name, ".RData", sep = ""),
-                  simdata_file_name = paste("simdata_", run_name, ".RData", sep = ""))
-
-files.done <- list.files()
-
-torun <- which(siminfo$estimate_file_name %in% files.done == FALSE)
-
-################################################################################
-#### Iterate through parameter combinations
-
-for(j in 1:length(torun)){
-  
-  #start.time <- Sys.time() # track run time
-
-  run_name <- siminfo$run_name[torun[j]] # set name for this run
-    
-  parms <- list("n_village" = siminfo$n_village[torun[j]], 
-                "n_ind" = siminfo$n_ind[torun[j]], 
-                "n_arm" = siminfo$n_arm[torun[j]], 
-                "sd_mult" = siminfo$sd_mult[torun[j]],
-                "alpha" = siminfo$alpha[torun[j]],
-                "pii" = siminfo$pii[torun[j]], 
-                "tau" = siminfo$tau[torun[j]], 
-                "delta" = siminfo$delta[torun[j]])
-    
-  #simdata <- SimData(run_name = run_name, parms = parms) # simulate data
-  load(paste("simdata_", run_name, ".RData", sep = ""))
-  simdata <- sim_trial_df
-  
-  #estimates <- Estimate(run_name = run_name, df = simdata) # estimate parameter posteriors
-  load(paste("posterior_", run_name, ".RData", sep = ""))
-  estimates <- posterior
-  
-  power <- GetPower(run_name = run_name, df = simdata, estimates = estimates, parms = parms) # calculate power push-forward
-
-  #siminfo[torun[j],"run_time"] <- round(Sys.time() - start.time,3) # calculate total run time for this rep
-    
-  #save(siminfo, file = paste("param_combos_", "info.RData", sep = "")) # update sim info and save
-}
- 
