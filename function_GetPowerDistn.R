@@ -1,45 +1,22 @@
-GetPower <- function(run_name, df, estimates, parms){
-  
-  source("D:/UCSD/Thesis/Bayesian cRCT design/code/function_CalcPower.R")
-  
-  # Define parameters
-  alpha = parms$alpha # type I error rate aka significance level
-  n_ind = parms$n_ind # cluster size
-  n_village = parms$n_village # number of clusters
-  
-  # Number of MCMC iterations
-  B = 1000
+GetPower <- function(run_name, parms, estimates){
 
-  # Sample from posterior
-  pii.B <- sample(estimates[,"pii"], B)
-  tau.B <- sample(estimates[,"tau"], B)
-  delta.B <- sample(estimates[,"delta"],B)
-  rho_y.B <- sample(estimates[,"rho_y"],B)
-  beta0.B <- sample(estimates[,"beta0"],B)
-  beta1.B <- sample(estimates[,"beta1"],B)
+  B = 1000
   
-  power.bayes <- rep(NA, B)
+  power.dist <- data.frame( "alpha" = rep(parms$alpha,B),
+                            "n" = rep(parms$n_village,B),
+                            "m" = rep(parms$n_ind,B),
+                            "n_arms" = rep(parms$n_arm,B),
+                            "pii" = sample(estimates$pii, B, replace = T),
+                           "tau" = sample(estimates$tau, B, replace = T),
+                           "rho" = sample(estimates$rho_y, B, replace = T),
+                           "delta" = sample(estimates$delta, B, replace = T),
+                           "beta0" = sample(estimates$beta0, B, replace = T))
   
-  # Calculate power for each set of sampled values
-  for(b in 1:B){
-    power.bayes[b] = CalcPower(alpha = alpha, 
-                               n = n_village, 
-                               m = n_ind, 
-                               pii = pii.B[b],
-                               tau = tau.B[b],
-                               delta = delta.B[b],
-                               rho = rho_y.B[b],
-                               P0 = exp(beta0.B[b])/(1+exp(beta0.B[b])),
-                               P1 = exp(beta0.B[b]+beta1.B[b])/(1+exp(beta0.B[b]+beta1.B[b]))
-                               )
-  }
-  
-  # Save power distribution
-  filename <- paste("power_", run_name, ".RData", sep ="" )
-  save(power.bayes, file = filename)
-  
-  # Return power distribution
-  return(power.bayes)
-  
+  power.dist <- power.dist |>
+    mutate(p1 = exp(beta0)/(exp(beta0)+1),
+           p2 = p1 + delta,
+          power = CalcPower(alpha = alpha, n = n, m = m, n_arms = n_arms, pii = pii, tau = tau, rho = rho, p1 = p1, p2 = p2))
+
+  return(power.dist)
 }
 
