@@ -31,6 +31,9 @@ Estimate <- function(df, run_name) {
   for(i in 1:n_village){index[i] <- min(which(df$village_id == i))}
   index[n_village+1] <- (nrow(df)+1)
   
+  # average cluster size to bound icc
+  m = nrow(df)/length(unique(df$village_id))
+  
   jagsData <- list("Y" = Y, # outcome
                    "X" = X, # arm
                    "R" = R, # follow-up
@@ -38,7 +41,8 @@ Estimate <- function(df, run_name) {
                    "village" = village, # village id
                    "J" = length(Y), # number of outcome observations
                    "N" = length(unique(df$village_id)), # number of villages
-                   "pisq" = pi^2) # 3.14^2 (because JAGS doesn't have this)
+                   "pisq" = pi^2 )# 3.14^2 (because JAGS doesn't have this)
+    
   
   ############################################################################
   ### Define model for estimation
@@ -73,7 +77,7 @@ Estimate <- function(df, run_name) {
         prec_eta ~ dunif(0, 500)
         
         p1 = exp(beta0)/(exp(beta0)+1)
-        p2 = exp(beta0+beta1)/(exp(beta0+beta1)+1)
+        p2 = exp(beta0+beta1)/(exp(beta0+beta1)+1) 
         delta = p2 - p1
         tau = 1/(a+b+1)
         pii = a/(a+b)
@@ -93,6 +97,7 @@ Estimate <- function(df, run_name) {
   
   # Extract posterior samples
   posterior <- as.data.frame(rbind(posterior_sample[[1]], posterior_sample[[2]], posterior_sample[[3]], posterior_sample[[4]]))
+  
   
   # Save posterior samples
   filename <- paste("posterior_", run_name, ".RData", sep = "")

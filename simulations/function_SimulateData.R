@@ -20,10 +20,6 @@ SimData <- function(run_name, parms){
   n_ind_total = n_village*n_ind # total number of individuals in the trial
   beta1 = logit(delta + p1) # logit-transformed treatment effect 
   beta0 = logit(p1) # logit-transformed baseline
-  
-  # Set seed for reproducibility
-  seed = as.numeric(pii*100 + tau*100 + delta*100) + n_village + n_ind
-  set.seed(seed)
     
   ##############################################################################
   ## ATTRITION

@@ -8,7 +8,7 @@ CalcPower <- function(alpha, n, m, n_arms, pii, tau, rho, p1, p2){
   
   z.b <- sqrt(k*m*pii*(1/G)*((p1-p2)^2)*(((p2*(1-p2))+(p1*(1-p1)))^(-1))) + z.a2 
   
-  power <- pnorm(z.b)
+ power <- pnorm(z.b)
   
   return(power)
 }
